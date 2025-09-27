@@ -1,37 +1,39 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { LogIn, User, Lock, AlertCircle } from "react-feather";
+import axios from "axios";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const dummyAdmin = {
-    email: "admin@example.com",
-    password: "admin123",
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (email === dummyAdmin.email && password === dummyAdmin.password) {
-        // ✅ Redirect ke dashboard
-        window.location.href = "/admin/dashboard";
-      } else {
-        setError("Email atau password salah.");
-      }
+    try {
+      const response = await axios.post("/api/admin/login", {
+        email,
+        password,
+      });
+
+      localStorage.setItem("adminToken", response.data.token);
+      localStorage.setItem("adminUsername", response.data.Username);
+
+      navigate("/admin/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Email atau password salah.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <div className="relative min-h-screen bg-blue-700 flex flex-col items-center justify-center p-4 overflow-hidden">
-      {/* SVG Background */}
       <div className="absolute inset-0 pointer-events-none opacity-80 sm:opacity-100">
         <svg
           width="100%"

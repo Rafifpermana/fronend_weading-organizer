@@ -1,33 +1,40 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User, Lock, Mail, LogIn, AlertCircle } from "react-feather";
+import axios from "axios";
 
 const AdminRegister = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [verifyPassword, setVerifyPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccess("");
 
-    setTimeout(() => {
-      if (password !== verifyPassword) {
-        setError("Password dan verifikasi tidak cocok.");
-      } else {
-        console.log("Registrasi berhasil");
-      }
+    try {
+      await axios.post("/api/admin/register", {
+        username,
+        email,
+        password,
+      });
+      setSuccess("Registrasi berhasil! Silakan login.");
+      setTimeout(() => navigate("/admin/login"), 2000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Registrasi gagal.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="relative min-h-screen bg-blue-700 flex flex-col items-center justify-center p-4 overflow-hidden">
-      {/* SVG Background */}
       <div className="absolute inset-0 pointer-events-none opacity-80 sm:opacity-100">
         <svg
           width="100%"
@@ -111,6 +118,13 @@ const AdminRegister = () => {
                 <span>{error}</span>
               </div>
             )}
+
+            {success && (
+              <div className="flex items-center text-xs text-green-300 bg-green-900/40 p-2.5 rounded-md mb-4">
+                <span>{success}</span>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}

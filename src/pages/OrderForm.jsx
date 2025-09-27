@@ -1,182 +1,181 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { FiSend } from "react-icons/fi";
 
 const OrderForm = () => {
   const navigate = useNavigate();
   const [success, setSuccess] = useState(false);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [catalog, setCatalog] = useState("");
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
+  const [error, setError] = useState("");
+  const [catalogs, setCatalogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    Email: "",
+    Nama: "",
+    catatan_pelanggan: "",
+    Phone_number: "",
+    Alamat: "",
+    Id_catalog: "",
+  });
 
-  const catalogOptions = {
-    popular: ["Aurora", "Zenith", "Eclipse", "Nova"],
-    "extended family": ["Legacy", "Heritage", "Tradition", "Roots"],
-    "family and friends": ["Together", "Bond", "Unity", "Harmony"],
-    "our family and relatives": ["Origin", "Lineage", "Kinfolk", "Tribe"],
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const response = await axios.get("/api/catalog");
+        setCatalogs(response.data);
+      } catch (err) {
+        console.error("Failed to fetch catalogs", err);
+      }
+    };
+    fetchCatalogs();
+  }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const priceMap = {
-    Aurora: 120000,
-    Zenith: 110000,
-    Eclipse: 130000,
-    Nova: 125000,
-    Legacy: 95000,
-    Heritage: 100000,
-    Tradition: 102000,
-    Roots: 98000,
-    Together: 60000,
-    Bond: 55000,
-    Unity: 58000,
-    Harmony: 62000,
-    Origin: 90000,
-    Lineage: 92000,
-    Kinfolk: 88000,
-    Tribe: 94000,
-  };
-
-  const handleCatalogChange = (e) => {
-    setCatalog(e.target.value);
-    setCategory("");
-    setPrice("");
-  };
-
-  const handleCategoryChange = (e) => {
-    const selected = e.target.value;
-    setCategory(selected);
-    setPrice(priceMap[selected] || "");
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccess(true);
-
-    setEmail("");
-    setName("");
-    setDesc("");
-    setPhone("");
-    setAddress("");
-    setCatalog("");
-    setCategory("");
-    setPrice("");
-
-    setTimeout(() => setSuccess(false), 3000);
+    setError("");
+    setLoading(true);
+    try {
+      await axios.post("/api/orders", formData);
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        navigate("/");
+      }, 3000);
+    } catch (err) {
+      setError("Gagal mengirim pesanan. Silakan periksa kembali data Anda.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <section className="bg-gray-100 py-20 px-6 md:px-16">
-      <div className="max-w-screen-md mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Form</h2>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter email"
-            className="w-full border p-3 rounded"
-            required
-          />
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter name"
-            className="w-full border p-3 rounded"
-            required
-          />
-          <textarea
-            value={desc}
-            onChange={(e) => setDesc(e.target.value)}
-            placeholder="Enter Deskripsi"
-            className="w-full border p-3 rounded"
-            rows={3}
-          />
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Enter phone number"
-            className="w-full border p-3 rounded"
-            required
-          />
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Enter address"
-            className="w-full border p-3 rounded"
-            required
-          />
-
-          <select
-            value={catalog}
-            onChange={handleCatalogChange}
-            className="w-full border p-3 rounded"
-            required
-          >
-            <option value="">Select Catalog</option>
-            {Object.keys(catalogOptions).map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={category}
-            onChange={handleCategoryChange}
-            className="w-full border p-3 rounded"
-            required
-          >
-            <option value="">Select Category</option>
-            {catalogOptions[catalog]?.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-
-          <input
-            type="text"
-            value={price ? `Rp ${price.toLocaleString("id-ID")}` : ""}
-            placeholder="Rp .........."
-            className="w-full border p-3 rounded bg-gray-100"
-            readOnly
-          />
-
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="border border-purple-600 text-purple-600 px-6 py-2 rounded hover:bg-purple-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
-            >
-              Send
-            </button>
+    <div className="bg-[#F8F5F2] min-h-screen">
+      <section className="py-12 md:py-20 px-6">
+        <div className="max-w-screen-md mx-auto bg-white p-8 md:p-10 rounded-xl shadow-lg">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-800">
+              Package Order Form
+            </h2>
+            <p className="text-gray-500 mt-2">
+              Lengkapi data di bawah ini untuk memulai perencanaan hari bahagia
+              Anda bersama kami di Eterna Wedding.
+            </p>
           </div>
 
-          {success && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <div className="bg-white border border-green-500 shadow-lg rounded-lg px-6 py-4 text-center animate-fade">
-                <h3 className="text-green-600 font-bold text-lg mb-2">
-                  ✅ Success!
-                </h3>
-                <p className="text-gray-700">Order submitted successfully.</p>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <input
+                type="text"
+                name="Nama"
+                value={formData.Nama}
+                onChange={handleChange}
+                placeholder="Full Name"
+                className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                required
+              />
+              <input
+                type="email"
+                name="Email"
+                value={formData.Email}
+                onChange={handleChange}
+                placeholder="Your Email Address"
+                className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+                required
+              />
             </div>
-          )}
-        </form>
-      </div>
-    </section>
+            <input
+              type="tel"
+              name="Phone_number"
+              value={formData.Phone_number}
+              onChange={handleChange}
+              placeholder="Phone Number"
+              className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              required
+            />
+            <input
+              type="text"
+              name="Alamat"
+              value={formData.Alamat}
+              onChange={handleChange}
+              placeholder="Full Address"
+              className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              required
+            />
+
+            <select
+              name="Id_catalog"
+              value={formData.Id_catalog}
+              onChange={handleChange}
+              className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500 bg-white"
+              required
+            >
+              <option value="">Select Catalog</option>
+              {catalogs.map((cat) => (
+                <option key={cat.Id} value={cat.Id}>
+                  {cat.Nama} -{" "}
+                  {new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                  }).format(cat.Harga)}
+                </option>
+              ))}
+            </select>
+
+            <textarea
+              name="catatan_pelanggan"
+              value={formData.catatan_pelanggan}
+              onChange={handleChange}
+              placeholder="Custumer notes"
+              className="w-full border-gray-300 p-3 rounded-lg focus:ring-yellow-500 focus:border-yellow-500"
+              rows={4}
+            />
+
+            <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="w-full sm:w-auto text-center px-6 py-3 rounded-full text-gray-700 font-semibold hover:bg-gray-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition-transform duration-300 hover:scale-105 disabled:bg-gray-400"
+              >
+                <FiSend />
+                <span>{loading ? "Sending..." : "Send Order"}</span>
+              </button>
+            </div>
+            {error && (
+              <p className="text-red-500 text-sm text-center pt-2">{error}</p>
+            )}
+          </form>
+        </div>
+
+        {success && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 px-4">
+            <div className="bg-white shadow-lg rounded-lg p-8 text-center animate-fade-in">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">✅</span>
+              </div>
+              <h3 className="text-green-600 font-bold text-2xl mb-2">
+                Order Shipped Successfully!
+              </h3>
+              <p className="text-gray-700">
+                Terima kasih! Tim kami akan segera menghubungi Anda.
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
   );
 };
 

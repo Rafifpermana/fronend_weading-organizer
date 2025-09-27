@@ -1,97 +1,102 @@
-import React, { useState } from "react";
-import { FiImage } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const ProductCard = ({ title, price, navigate }) => (
-  <div className="bg-white rounded-lg p-4 text-left">
-    <div className="bg-gray-400 h-40 rounded-md flex items-center justify-center mb-4">
-      <FiImage className="text-gray-500 text-4xl" />
+const packageImages = {
+  1: "/images/perunggu.jpg",
+  3: "/images/silver.jpg",
+  4: "/images/gold.jpg",
+  5: "/images/platinum.jpg",
+  6: "/images/diamons.jpg",
+  7: "/images/royal.jpg",
+};
+
+const defaultImage = "/images/home.jpg";
+
+const ProductCard = ({ title, price, description, imageUrl, navigate }) => (
+  <div className="bg-white rounded-lg p-5 text-center shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col transform hover:-translate-y-2">
+    <div className="bg-gray-100 h-48 rounded-md mb-5 overflow-hidden">
+      <img
+        src={imageUrl}
+        alt={title}
+        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+      />
     </div>
-    <h4 className="font-bold text-gray-800">{title}</h4>
-    <div className="flex justify-between items-center mt-2">
-      <p className="text-gray-700">{price}</p>
-      <button
-        onClick={() => navigate("/order")}
-        className="text-blue-600 font-semibold hover:text-blue-800"
-      >
-        Order now
-      </button>
+    <div className="flex-grow flex flex-col justify-between">
+      <div>
+        <h4 className="text-xl font-bold text-gray-800">{title}</h4>
+        <p className="text-sm text-gray-500 mt-2 mb-4 min-h-[60px]">
+          {description}
+        </p>
+      </div>
+      <div>
+        <p className="text-yellow-600 font-bold text-2xl mb-4">
+          {new Intl.NumberFormat("id-ID", {
+            style: "currency",
+            currency: "IDR",
+            minimumFractionDigits: 0,
+          }).format(price)}
+        </p>
+        <button
+          onClick={() => navigate("/order")}
+          className="bg-gray-800 text-white w-full px-6 py-3 rounded-full hover:bg-gray-700 transition-transform duration-300 hover:scale-105"
+        >
+          Order Now
+        </button>
+      </div>
     </div>
   </div>
 );
 
 const Catalog = () => {
-  const [activeTab, setActiveTab] = useState("Popular");
-
-  const productData = {
-    Popular: [
-      { title: "Adition", price: "$72.00 / day" },
-      { title: "Velocity", price: "$65.00 / day" },
-      { title: "Nimbus", price: "$80.00 / day" },
-      { title: "Orbit", price: "$90.00 / day" },
-    ],
-    "Exclusive journey": [
-      { title: "Aurora", price: "$120.00 / day" },
-      { title: "Zenith", price: "$110.00 / day" },
-      { title: "Eclipse", price: "$130.00 / day" },
-      { title: "Nova", price: "$125.00 / day" },
-    ],
-    "Family and friends": [
-      { title: "Together", price: "$60.00 / day" },
-      { title: "Bond", price: "$55.00 / day" },
-      { title: "Unity", price: "$58.00 / day" },
-      { title: "Harmony", price: "$62.00 / day" },
-    ],
-    "Our family collection": [
-      { title: "Legacy", price: "$95.00 / day" },
-      { title: "Heritage", price: "$100.00 / day" },
-      { title: "Roots", price: "$98.00 / day" },
-      { title: "Tradition", price: "$102.00 / day" },
-    ],
-  };
-
-  const tabs = Object.keys(productData);
+  const [catalogs, setCatalogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchCatalogs = async () => {
+      try {
+        const response = await axios.get("/api/catalog");
+        setCatalogs(response.data);
+      } catch (error) {
+        console.error("Gagal mengambil data katalog:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCatalogs();
+  }, []);
+
   return (
-    <section id="catalog" className="bg-slate-100 py-20 px-8 md:px-16">
+    <section id="catalog" className="bg-[#F8F5F2] py-24 px-8 md:px-16">
       <div className="container mx-auto text-center">
-        <h2 className="text-3xl font-bold text-gray-800">
-          Lorem ipsum catalog
+        <h2 className="text-4xl font-bold text-gray-800">
+          Our Package Catalog
         </h2>
-        <p className="text-gray-700 mt-2 mb-8 max-w-2xl mx-auto">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        <p className="text-gray-600 text-lg mt-2 mb-16 max-w-3xl mx-auto">
+          Pilih paket yang paling sesuai dengan impian Anda. Setiap paket
+          dirancang untuk memberikan pengalaman terbaik.
         </p>
 
-        {/* Tabs */}
-        <div className="flex justify-center space-x-8 mb-10 border-b">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`py-2 font-semibold ${
-                activeTab === tab
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-800"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Products */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-          {productData[activeTab].map((product, index) => (
-            <ProductCard
-              key={index}
-              title={product.title}
-              price={product.price}
-              navigate={navigate}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <p className="text-gray-500">Memuat katalog...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {catalogs.map((product) => {
+              const imageUrl = packageImages[product.Id] || defaultImage;
+              return (
+                <ProductCard
+                  key={product.Id}
+                  title={product.Nama}
+                  price={product.Harga}
+                  description={product.Deskripsi}
+                  imageUrl={imageUrl}
+                  navigate={navigate}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
