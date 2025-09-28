@@ -84,7 +84,6 @@ const CatalogSection = () => {
   return (
     <section>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Catalog Management</h1>
         <button
           onClick={handleOpenCreateModal}
           className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg shadow hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-800 focus:ring-offset-2 transition-all"
